@@ -13,6 +13,10 @@ import java.time.LocalDate;
 public class ProcessadorArquivo {
 
     public ResultadoArquivo processar(Path arquivo) throws IOException {
+        System.out.println(
+            "Processando " + arquivo.getFileName()
+                + " na thread " + Thread.currentThread().getName()
+        );
         BigDecimal faturamento = BigDecimal.ZERO;
         int vendasValidas = 0;
         int linhasRejeitadas = 0;
@@ -29,8 +33,10 @@ public class ProcessadorArquivo {
 
             String linha;
             int numeroLinha = 1;
-
             while ((linha = leitor.readLine()) != null) {
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new IOException("Processamento cancelado.");
+                }
                 numeroLinha++;
 
                 try {
