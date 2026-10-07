@@ -1,5 +1,11 @@
 # Projeto: processador paralelo de relatórios de vendas
 
+> Estado atual: as etapas principais deste guia estão implementadas. Consulte o
+> `README.md` para executar a aplicação e `scripts/verificar.py` para verificar
+> os cenários. Dos desafios extras, foram implementados o recebimento por ordem
+> de conclusão, o limite de tarefas em andamento e a escrita temporária de
+> relatórios. Timeout e suporte a CSV completo continuam como exercícios opcionais.
+
 Você vai construir uma ferramenta de terminal que lê vários arquivos CSV de vendas em paralelo e gera um relatório consolidado. É uma aplicação real: uma empresa pode receber um arquivo por loja e precisar juntar os dados para analisar seu faturamento diário.
 
 **Nível:** intermediário. **Tecnologias:** Java 17 ou superior, biblioteca padrão e, se quiser, Maven. Não precisa de Spring, banco de dados ou interface gráfica.

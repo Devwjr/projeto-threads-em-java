@@ -7,111 +7,51 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.DateTimeException;
-import java.time.LocalDate;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ProcessadorArquivo {
-
-    public ResultadoArquivo processar(Path arquivo) throws IOException {
-        System.out.println(
-            "Processando " + arquivo.getFileName()
-                + " na thread " + Thread.currentThread().getName()
-        );
+    public ResultadoArquivo processar(Path arquivo) throws IOException, InterruptedException {
+        verificarInterrupcao();
+        String nome = arquivo.getFileName().toString();
         BigDecimal faturamento = BigDecimal.ZERO;
-        int vendasValidas = 0;
-        int linhasRejeitadas = 0;
+        long vendas = 0;
+        long unidades = 0;
+        Map<String, TotalProduto> produtos = new HashMap<>();
+        List<ErroProcessamento> erros = new ArrayList<>();
 
-        try (BufferedReader leitor = Files.newBufferedReader(
-                arquivo, StandardCharsets.UTF_8)) {
-
-            String cabecalho = leitor.readLine();
-
-            if (!"id_venda,data,produto,quantidade,preco_unitario"
-                    .equals(cabecalho)) {
+        try (BufferedReader leitor = Files.newBufferedReader(arquivo, StandardCharsets.UTF_8)) {
+            if (!"id_venda,data,produto,quantidade,preco_unitario".equals(leitor.readLine())) {
                 throw new IllegalArgumentException("Cabeçalho inválido.");
             }
-
             String linha;
-            int numeroLinha = 1;
+            long numeroLinha = 1;
             while ((linha = leitor.readLine()) != null) {
-                if (Thread.currentThread().isInterrupted()) {
-                    throw new IOException("Processamento cancelado.");
-                }
+                verificarInterrupcao();
                 numeroLinha++;
-
+                Venda venda;
                 try {
-                    String[] campos = linha.split(",", -1);
-
-                    if (campos.length != 5) {
-                        throw new IllegalArgumentException(
-                            "Esperados 5 campos."
-                        );
-                    }
-
-                    for (int i = 0; i < campos.length; i++) {
-                        campos[i] = campos[i].trim();
-
-                        if (campos[i].isEmpty()) {
-                            throw new IllegalArgumentException(
-                                "Campo " + (i + 1) + " está vazio."
-                            );
-                        }
-                    }
-
-                    if (!campos[1].matches("\\d{4}-\\d{2}-\\d{2}")) {
-                        throw new IllegalArgumentException(
-                            "A data deve estar no formato AAAA-MM-DD."
-                        );
-                    }
-
-                    LocalDate.parse(campos[1]);
-
-                    int quantidade = Integer.parseInt(campos[3]);
-
-                    if (quantidade <= 0) {
-                        throw new IllegalArgumentException(
-                            "A quantidade deve ser maior que zero."
-                        );
-                    }
-
-                    if (!campos[4].matches("\\d+(\\.\\d{1,2})?")) {
-                        throw new IllegalArgumentException(
-                            "Preço inválido: use ponto e até duas casas decimais."
-                        );
-                    }
-
-                    BigDecimal precoUnitario = new BigDecimal(campos[4]);
-
-                    if (precoUnitario.compareTo(BigDecimal.ZERO) <= 0) {
-                        throw new IllegalArgumentException(
-                            "O preço deve ser maior que zero."
-                        );
-                    }
-
-                    BigDecimal valorVenda = precoUnitario.multiply(
-                        BigDecimal.valueOf(quantidade)
-                    );
-
-                    faturamento = faturamento.add(valorVenda);
-                    vendasValidas++;
-
+                    venda = Venda.interpretar(linha);
                 } catch (IllegalArgumentException | DateTimeException erro) {
-                    linhasRejeitadas++;
-
-                    System.err.println(
-                        arquivo.getFileName()
-                            + " — linha " + numeroLinha
-                            + " rejeitada: " + erro.getMessage()
-                    );
+                    erros.add(new ErroProcessamento(nome, numeroLinha, erro.getMessage()));
+                    continue;
                 }
+                vendas = Math.incrementExact(vendas);
+                unidades = Math.addExact(unidades, venda.quantidade());
+                faturamento = faturamento.add(venda.valor());
+                produtos.merge(venda.produto(),
+                    new TotalProduto(venda.quantidade(), venda.valor()), TotalProduto::somar);
             }
         }
+        verificarInterrupcao();
+        return new ResultadoArquivo(nome, faturamento, vendas, unidades, produtos, erros);
+    }
 
-        return new ResultadoArquivo(
-            arquivo.getFileName().toString(),
-            faturamento,
-            vendasValidas,
-            linhasRejeitadas
-        );
+    private static void verificarInterrupcao() throws InterruptedException {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException("Processamento cancelado.");
+        }
     }
 }
