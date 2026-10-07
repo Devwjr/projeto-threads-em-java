@@ -13,6 +13,7 @@ A aplicação lê arquivos CSV de diferentes lojas, valida as vendas e consolida
 - `ExecutorCompletionService` para receber tarefas por ordem de conclusão.
 - Limite de tarefas em andamento, interrupção e encerramento do executor.
 - Geração de relatórios e comparação de desempenho.
+- Testes de integração em Java com JUnit 5 e Maven.
 
 ## Como executar
 
@@ -54,22 +55,24 @@ Cada relatório é escrito em um arquivo temporário antes de substituir seu des
 
 ## Verificações e desempenho
 
-Com Python 3 e o JDK instalados, execute as verificações de integração:
+Com Maven e o JDK instalados, execute os testes de integração com JUnit 5:
 
 ```bash
-python3 scripts/verificar.py
+mvn test
 ```
 
 Para gerar 20 arquivos com 50 mil vendas cada e comparar 1, 2, 4 e 8 threads, com três medições por configuração:
 
+Execute primeiro `mvn test` ou o comando de compilação acima para criar `target/classes`.
+
 ```bash
-python3 scripts/comparar_desempenho.py
+java -cp target/classes br.com.wesley.vendas.Desempenho
 ```
 
-O script usa dados temporários, confirma que os relatórios são iguais e salva as medições em `dados/saida/desempenho.csv`. Para uma execução menor:
+A ferramenta Java usa dados temporários, confirma que os relatórios são iguais e salva as medições em `dados/saida/desempenho.csv`. Para uma execução menor:
 
 ```bash
-python3 scripts/comparar_desempenho.py --arquivos 4 --linhas 10000
+java -cp target/classes br.com.wesley.vendas.Desempenho --arquivos 4 --linhas 10000
 ```
 
 As medições incluem a inicialização de uma nova JVM por execução. A primeira execução de cada configuração é descartada, mas isso não mantém a JVM aquecida entre medições. CPU, disco, memória e cache influenciam o resultado; mais threads não garantem mais velocidade.

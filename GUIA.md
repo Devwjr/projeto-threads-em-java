@@ -1,7 +1,7 @@
 # Projeto: processador paralelo de relatórios de vendas
 
 > Estado atual: as etapas principais deste guia estão implementadas. Consulte o
-> `README.md` para executar a aplicação e `scripts/verificar.py` para verificar
+> `README.md` para executar a aplicação e `mvn test` para verificar
 > os cenários. Dos desafios extras, foram implementados o recebimento por ordem
 > de conclusão, o limite de tarefas em andamento e a escrita temporária de
 > relatórios. Timeout e suporte a CSV completo continuam como exercícios opcionais.
