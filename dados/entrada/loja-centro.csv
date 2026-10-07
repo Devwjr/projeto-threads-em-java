@@ -1,0 +1,4 @@
+id_venda,data,produto,quantidade,preco_unitario
+V001,2026-10-01,Caderno,2,18.90
+V002,2026-10-01,Caneta,5,3.50
+V003,2026-10-02,Mochila,1,120.00
